@@ -45,6 +45,7 @@ datasets = load_data("mnist.pkl.gz")
 model = NeuralNetwork(
 	n_inputs=28*28,
 	batch_size=20,
+	input_shape=(20, 1, 28, 28),
 	layers = [
 		(ConvolutionLayer,
 		{

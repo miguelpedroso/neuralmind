@@ -25,8 +25,8 @@ class ConvolutionLayer(object):
 		filter_shape = (n_kernels, filter_shape[0], filter_shape[1], filter_shape[2])
 		
 
-		print image_shape
-		print filter_shape
+		#print image_shape
+		#print filter_shape
 
 		# there are "num input feature maps * filter height * filter width"
 		# inputs to each hidden unit
@@ -53,17 +53,16 @@ class ConvolutionLayer(object):
 			image_shape=image_shape
 		)
 
-		# downsample each feature map individually, using maxpooling
+		# Downsample each feature map individually, using maxpooling
 		pooled_out = downsample.max_pool_2d(
 			input=conv_out,
 			ds=poolsize,
 			ignore_border=True
 		)
 
-		# add the bias term. Since the bias is a vector (1D array), we first
+		# Add the bias term. Since the bias is a vector (1D array), we first
 		# reshape it to a tensor of shape (1, n_filters, 1, 1). Each bias will
-		# thus be broadcasted across mini-batches and feature map
-		# width & height
+		# thus be broadcasted across mini-batches and feature map width & height
 		self.output = non_linearity(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
 
 		self.params = [self.W, self.b]

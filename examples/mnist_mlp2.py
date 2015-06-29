@@ -1,3 +1,7 @@
+import sys
+sys.path.append("../")
+sys.path.append("../neuralmind")
+
 import gzip
 import cPickle
 import numpy as np

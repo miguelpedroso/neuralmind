@@ -8,25 +8,22 @@ import theano.tensor as T
 
 import time
 
-from layers import HiddenLayer
-#from layers import ConvolutionLayer
-
 class NeuralNetwork(object):
-	def __init__(self, n_inputs, layers, batch_size=256, n_epochs=100, cost=None, random_seed=None):
+	def __init__(self, n_inputs, layers, batch_size=256, n_epochs=100, input_shape=None, cost=None, random_seed=23455):
 
-		#x0 = T.tensor4(name='input')
-		self.input = x = T.matrix('x')
-		self.layer1_input = x.reshape((batch_size, 1, 28, 28))
-		#self.input = x = T.matrix('x')
+		self.layer1_input = self.input = x = T.matrix('x')
+
+		if input_shape != None:
+			self.layer1_input = x.reshape(input_shape)
+
 		self.cost = cost
 		self.batch_size = batch_size
 
-		rng = np.random.RandomState(23455)
+		rng = np.random.RandomState(random_seed)
 
 		self.layers = []
 
 		for layer in layers:
-			#print layer
 			print layer[1]
 
 			if not self.layers:
@@ -87,7 +84,7 @@ class NeuralNetwork(object):
 		#self.errors = self.layers[-1].classification_errors
 
 		index = T.lscalar()  # index to a [mini]batch
-		x = self.input#T.matrix('x')  # data, presented as rasterized images
+		x = self.input  # data, presented as rasterized images
 		y = T.ivector('y')  # labels, presented as 1D vector of [int] labels
 
 		# Create list of parameters
@@ -119,7 +116,7 @@ class NeuralNetwork(object):
 		
 		validate_model = theano.function(
 			inputs = [index],
-			outputs = self.layers[-1].classification_errors(y),
+			outputs = [self.layers[-1].classification_errors(y), cost],
 			givens = {
 				x: valid_set_x[index * batch_size: (index + 1) * batch_size],
 				y: valid_set_y[index * batch_size: (index + 1) * batch_size]
@@ -160,10 +157,20 @@ class NeuralNetwork(object):
 
 				if (iter + 1) % validation_frequency == 0:
 					# compute zero-one loss on validation set
-					validation_losses = [validate_model(i) for i in xrange(n_valid_batches)]
-					this_validation_loss = np.mean(validation_losses)
+					#validation_losses, v_costs = [validate_model(i) for i in xrange(n_valid_batches)]
+					#this_validation_loss = np.mean(validation_losses)
+					#this_validation_cost = np.mean(v_costs)
+					validation_losses = []
+					v_costs = []
+					for i in xrange(n_valid_batches):
+						a, b = validate_model(i)
+						validation_losses.append(a)
+						v_costs.append(b)
 
-					print('epoch %i, minibatch %i/%i, nll = %f, validation error %f %%' % (epoch, minibatch_index + 1, n_train_batches, minibatch_avg_cost, this_validation_loss * 100.))
+					this_validation_loss = np.mean(validation_losses)
+					this_validation_cost = np.mean(v_costs)
+
+					print('epoch %i, minibatch %i/%i, nll = %f, val loss %f, validation error %f %%' % (epoch, minibatch_index + 1, n_train_batches, minibatch_avg_cost, this_validation_cost, this_validation_loss * 100.))
 				
 				# if we got the best validation score until now
 				if this_validation_loss < best_validation_loss:
