@@ -15,6 +15,8 @@ from layers import ConvolutionLayer
 from layers import FlattenLayer
 import activations
 
+from trainers import SGDTrainer
+
 def load_data(dataset):
 
 	print '... loading data'
@@ -46,7 +48,7 @@ model = NeuralNetwork(
 	n_inputs=28*28,
 	batch_size=20,
 	input_shape=(20, 1, 28, 28),
-	layers = [
+	layers=[
 		(ConvolutionLayer,
 		{
 			'image_shape': (1, 28, 28),
@@ -71,7 +73,15 @@ model = NeuralNetwork(
 			'n_units': 10,
 			'non_linearity': activations.softmax
 		})
-	]
+	],
+	trainer=(SGDTrainer,
+		{
+			'batch_size': 20,
+			'learning_rate': 0.1,
+			'n_epochs': 100,
+		}
+	)
+		
 )
 
 model.train(datasets[0], datasets[1])
