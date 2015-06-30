@@ -15,7 +15,7 @@ class SGDTrainer(object):
 		self.input = self.model.input
 		self.layers = self.model.layers
 		self.batch_size = batch_size
-		self.learning_rate = learning_rate
+		self.initial_learning_rate = learning_rate
 		self.n_epochs = n_epochs
 	
 
@@ -38,6 +38,10 @@ class SGDTrainer(object):
 		x = self.input  # data, presented as rasterized images
 		y = T.ivector('y')  # labels, presented as 1D vector of [int] labels
 
+		#lr = T.dscalar('lr')
+		#lr_update = (lr, 0.9 * lr)
+		learning_rate = theano.shared(np.asarray(self.initial_learning_rate, dtype=theano.config.floatX))
+
 		# Create list of parameters
 		self.params = []
 		for layer in self.layers:
@@ -49,7 +53,7 @@ class SGDTrainer(object):
 		grads = T.grad(cost, self.params)
 
 		updates = [
-			(param_i, param_i - self.learning_rate * grad_i)
+			(param_i, param_i - learning_rate * grad_i)
 			for param_i, grad_i in zip(self.params, grads)
 		]
 
@@ -72,6 +76,8 @@ class SGDTrainer(object):
 				y: valid_set_y[index * batch_size: (index + 1) * batch_size]
 			}
 		)
+
+		decay_learning_rate = theano.function(inputs=[], outputs=learning_rate, updates={learning_rate: learning_rate * 0.99})
 
 		###############
 		# TRAIN MODEL #
@@ -119,7 +125,9 @@ class SGDTrainer(object):
 					this_validation_loss = np.mean(validation_losses)
 					this_validation_cost = np.mean(v_costs)
 
-					print('epoch %i, minibatch %i/%i, nll = %f, val loss %f, validation error %f %%' % (epoch, minibatch_index + 1, n_train_batches, minibatch_avg_cost, this_validation_cost, this_validation_loss * 100.))
+					new_lr = decay_learning_rate()
+
+					print('epoch %i, minibatch %i/%i, lr = %f, nll = %f, val loss %f, validation error %f %%' % (epoch, minibatch_index + 1, n_train_batches, new_lr, minibatch_avg_cost, this_validation_cost, this_validation_loss * 100.))
 				
 				# if we got the best validation score until now
 				if this_validation_loss < best_validation_loss:
