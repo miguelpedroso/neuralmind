@@ -66,3 +66,6 @@ class ConvolutionLayer(object):
 		self.output = non_linearity(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
 
 		self.params = [self.W, self.b]
+
+		# Terms to be regularized, if chosen
+		self.reg_terms = [self.W]

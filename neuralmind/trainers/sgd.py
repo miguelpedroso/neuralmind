@@ -9,7 +9,7 @@ import theano.tensor as T
 import time
 
 class SGDTrainer(object):
-	def __init__(self, model, batch_size=20, n_epochs=100, learning_rate=0.1, cost=None, random_seed=23455):
+	def __init__(self, model, batch_size=20, n_epochs=100, learning_rate=0.1, cost=None, global_L1_regularization=None, global_L2_regularization=None,  random_seed=23455):
 
 		self.model = model
 		self.input = self.model.input
@@ -17,6 +17,8 @@ class SGDTrainer(object):
 		self.batch_size = batch_size
 		self.initial_learning_rate = learning_rate
 		self.n_epochs = n_epochs
+		self.global_L1_regularization = global_L1_regularization
+		self.global_L2_regularization = global_L2_regularization
 	
 
 	def train(self, train_set, validation_set):	
@@ -32,15 +34,11 @@ class SGDTrainer(object):
 		n_train_batches = train_set_x.get_value(borrow=True).shape[0] / batch_size
 		n_valid_batches = valid_set_x.get_value(borrow=True).shape[0] / batch_size
 
-		#self.errors = self.layers[-1].classification_errors
-
 		index = T.lscalar()  # index to a [mini]batch
 		x = self.input  # data, presented as rasterized images
 		y = T.ivector('y')  # labels, presented as 1D vector of [int] labels
 
-		#lr = T.dscalar('lr')
-		#lr_update = (lr, 0.9 * lr)
-		learning_rate = theano.shared(np.asarray(self.initial_learning_rate, dtype=theano.config.floatX))
+		learning_rate = theano.shared(np.asarray(self.initial_learning_rate, dtype=theano.config.floatX))  # Dynamic learning rate
 
 		# Create list of parameters
 		self.params = []
@@ -48,6 +46,14 @@ class SGDTrainer(object):
 			self.params = self.params + layer.params
 
 		cost = costs.negative_log_likelihood(self.layers[-1].output , y)
+
+		#Ln regularization
+		for layer in self.layers:
+			for term in layer.reg_terms:
+				if self.global_L1_regularization != None:
+					cost = cost + (abs(term)).sum() * self.global_L1_regularization  # Add L1 term
+				if self.global_L2_regularization != None:
+					cost = cost + (term ** 2).sum() * self.global_L2_regularization  # Add L2 term
 
 		# Gradients and upgrades
 		grads = T.grad(cost, self.params)

@@ -47,6 +47,9 @@ class HiddenLayer(object):
 
 		self.params = [self.W, self.b]
 
+		# Terms to be regularized, if chosen
+		self.reg_terms = [self.W]
+
 	def classification_errors(self, y):
 		if y.ndim != self.y_pred.ndim:
 			raise TypeError(

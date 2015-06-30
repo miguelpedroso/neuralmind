@@ -13,3 +13,4 @@ class FlattenLayer(object):
 		self.n_out = n_in
 		self.output_params = {}
 		self.params = []
+		self.reg_terms = []
