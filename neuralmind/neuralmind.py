@@ -26,8 +26,8 @@ class NeuralNetwork(object):
 
 		self.layers = []
 
-		if not self.theano_rng:
-            self.theano_rng = RandomStreams(numpy_rng.randint(2 ** 30)) # Put seed here
+		#if not self.theano_rng:
+		self.theano_rng = T.shared_randomstreams.RandomStreams(rng.randint(2 ** 30)) # Put seed here
 
 		for layer in layers:
 			print layer[1]
