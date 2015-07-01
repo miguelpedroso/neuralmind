@@ -1,3 +1,7 @@
+import sys
+sys.path.append("../")
+sys.path.append("../neuralmind")
+
 import gzip
 import cPickle
 import numpy as np
@@ -7,7 +11,10 @@ import theano.tensor as T
 
 from neuralmind import NeuralNetwork
 from layers import HiddenLayer
+from layers import DropoutLayer
 import activations
+
+from trainers import SGDTrainer
 
 def load_data(dataset):
 
@@ -36,40 +43,36 @@ def load_data(dataset):
 # Load MNIST
 datasets = load_data("mnist.pkl.gz")
 
-"""
 model = NeuralNetwork(
 	n_inputs=28*28,
 	batch_size=20,
 	layers = [
 		(HiddenLayer,
 		{
-			'n_units': 100, 
-			'non_linearity': activations.sigmoid
+			'n_units': 512, 
+			'non_linearity': activations.rectify
 		}),
+		(DropoutLayer, {'probability': 0.5}),
 		(HiddenLayer,
 		{
-			'n_units': 10, 
-			'non_linearity': activations.sigmoid
-		})
-	]
-)
-"""
-
-model = NeuralNetwork(
-	n_inputs=28*28,
-	batch_size=20,
-	layers = [
-		(HiddenLayer,
-		{
-			'n_units': 80, 
-			'non_linearity': activations.sigmoid
+			'n_units': 512, 
+			'non_linearity': activations.rectify
 		}),
+		(DropoutLayer, {'probability': 0.5}),
 		(HiddenLayer,
 		{
 			'n_units': 10, 
 			'non_linearity': activations.softmax
 		})
-	]
+	],
+	trainer=(SGDTrainer,
+		{
+			'batch_size': 20,
+			'learning_rate': 0.1,
+			'n_epochs': 100,
+			#'global_L2_regularization': 0.0001
+		}
+	)
 )
 
 model.train(datasets[0], datasets[1])

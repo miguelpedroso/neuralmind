@@ -14,6 +14,7 @@ class SGDTrainer(object):
 		self.model = model
 		self.input = self.model.input
 		self.layers = self.model.layers
+		self.layers_pred =  self.model.layers_pred
 		self.batch_size = batch_size
 		self.initial_learning_rate = learning_rate
 		self.n_epochs = n_epochs
@@ -45,7 +46,7 @@ class SGDTrainer(object):
 		for layer in self.layers:
 			self.params = self.params + layer.params
 
-		cost = costs.negative_log_likelihood(self.layers[-1].output , y)
+		cost = costs.negative_log_likelihood(self.layers[-1].output, y)
 
 		#Ln regularization
 		for layer in self.layers:
@@ -76,7 +77,7 @@ class SGDTrainer(object):
 
 		self.validate_model = theano.function(
 			inputs = [index],
-			outputs = [self.layers[-1].classification_errors(y), cost],
+			outputs = [self.layers_pred[-1].classification_errors(y), cost],
 			givens = {
 				x: valid_set_x[index * batch_size: (index + 1) * batch_size],
 				y: valid_set_y[index * batch_size: (index + 1) * batch_size]

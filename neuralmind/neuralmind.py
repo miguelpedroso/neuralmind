@@ -8,6 +8,8 @@ import theano.tensor as T
 
 import time
 
+from layers import DropoutLayer
+
 from trainers import SGDTrainer
 
 class NeuralNetwork(object):
@@ -25,10 +27,13 @@ class NeuralNetwork(object):
 		rng = np.random.RandomState(random_seed)
 
 		self.layers = []
+		self.layers_pred = []
 
+		self.theano_rng = None
 		#if not self.theano_rng:
 		#self.theano_rng = T.shared_randomstreams.RandomStreams(rng.randint(2 ** 30)) # Put seed here
 
+		"""
 		for layer in layers:
 			print layer[1]
 
@@ -53,6 +58,52 @@ class NeuralNetwork(object):
 				b = layer[0](**l_params)
 
 			self.layers.append(b)
+		"""
+		prev_layer_class = None
+		for layer in layers:
+			print layer
+
+			if not self.layers:
+				l_params = {
+					'input': self.layer1_input, 
+					'n_in': n_inputs,
+					'rng': rng,
+					'model': self
+				}
+				l_params.update(layer[1])
+				b = layer[0](**l_params) # Cascade inputs!
+			else:
+				self.prev_layer = prev_layer = self.layers[-1]
+				l_params = {
+					'input': prev_layer.output, 
+					'n_in': prev_layer.n_out,
+					'rng': rng,
+					'model': self,
+				}
+				l_params.update(layer[1])
+				b = layer[0](**l_params)
+
+				if prev_layer_class == DropoutLayer:
+					l_params = {
+						'input': self.layers[-1].output_pred, 
+						'n_in': prev_layer.n_out,
+						'rng': rng,
+						'model': self,
+						'W': b.W,  # TODO: RESCALE THESE WAITS
+						'b': b.b,  # Put this more dynamic!
+						'W_rescale': 0.5  #Fix this
+					}
+					l_params.update(layer[1])
+					c = layer[0](**l_params)
+					self.layers_pred.append(c)
+					print "other path"
+				else:
+					self.layers_pred.append(b) #Except dropout
+
+			self.layers.append(b)
+
+			prev_layer_class = layer[0]
+
 
 		self.n_epochs = n_epochs
 		

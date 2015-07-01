@@ -6,7 +6,7 @@ import theano.tensor as T
 import activations
 
 class HiddenLayer(object):
-	def __init__(self, rng, input, n_in, n_units, non_linearity = activations.softmax, W = None, b = None, model=None):
+	def __init__(self, rng, input, n_in, n_units, non_linearity = activations.softmax, W = None, b = None, W_rescale=None, model=None):
 		self.input = input
 		self.n_out = n_out = n_units
 		self.output_params = {}
@@ -36,7 +36,10 @@ class HiddenLayer(object):
 		#self.W = theano.shared(np.zeros((n_in, n_out), dtype=theano.config.floatX), name = 'W', borrow = True)
 		#self.b = theano.shared(np.zeros((n_out,), dtype=theano.config.floatX), name = 'b', borrow = True)	
 
-		linear_output = T.dot(input, self.W) + self.b
+		if W_rescale is None:
+			linear_output = T.dot(input, self.W) + self.b
+		else:
+			linear_output = T.dot(input, self.W * W_rescale) + self.b
 
 		self.output = (
 			lin_output if non_linearity is None
