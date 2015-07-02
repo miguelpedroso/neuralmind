@@ -13,6 +13,9 @@ from neuralmind import NeuralNetwork
 from layers import HiddenLayer
 import activations
 
+from trainers import SGDTrainer
+from trainers import ExponentialDecay
+
 def load_data(dataset):
 
 	print '... loading data'
@@ -40,25 +43,6 @@ def load_data(dataset):
 # Load MNIST
 datasets = load_data("mnist.pkl.gz")
 
-"""
-model = NeuralNetwork(
-	n_inputs=28*28,
-	batch_size=20,
-	layers = [
-		(HiddenLayer,
-		{
-			'n_units': 100, 
-			'non_linearity': activations.sigmoid
-		}),
-		(HiddenLayer,
-		{
-			'n_units': 10, 
-			'non_linearity': activations.sigmoid
-		})
-	]
-)
-"""
-
 model = NeuralNetwork(
 	n_inputs=28*28,
 	batch_size=20,
@@ -78,7 +62,16 @@ model = NeuralNetwork(
 			'n_units': 10, 
 			'non_linearity': activations.softmax
 		})
-	]
+	],
+	trainer=(SGDTrainer,
+		{
+			'batch_size': 20,
+			'learning_rate': 0.1,
+			'n_epochs': 100,
+			'global_L2_regularization': 0.0001,
+			'dynamic_learning_rate': (ExponentialDecay, {'decay': 0.99}),
+		}
+	)
 )
 
 model.train(datasets[0], datasets[1])

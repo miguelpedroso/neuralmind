@@ -9,7 +9,7 @@ import theano.tensor as T
 import time
 
 class SGDTrainer(object):
-	def __init__(self, model, batch_size=20, n_epochs=100, learning_rate=0.1, cost=None, global_L1_regularization=None, global_L2_regularization=None,  random_seed=23455):
+	def __init__(self, model, batch_size=20, n_epochs=100, learning_rate=0.1, dynamic_learning_rate=None, cost=None, global_L1_regularization=None, global_L2_regularization=None,  random_seed=23455):
 
 		self.model = model
 		self.input = self.model.input
@@ -20,6 +20,7 @@ class SGDTrainer(object):
 		self.n_epochs = n_epochs
 		self.global_L1_regularization = global_L1_regularization
 		self.global_L2_regularization = global_L2_regularization
+		self.dynamic_learning_rate = dynamic_learning_rate
 	
 
 	def train(self, train_set, validation_set):	
@@ -84,7 +85,10 @@ class SGDTrainer(object):
 			}
 		)
 
-		decay_learning_rate = theano.function(inputs=[], outputs=learning_rate, updates={learning_rate: learning_rate * 0.99})
+		if self.dynamic_learning_rate is not None:
+			decay_learning_rate = theano.function(inputs=[], outputs=learning_rate, updates={learning_rate: learning_rate * 0.99})
+		else:
+			decay_learning_rate = None
 
 		###############
 		# TRAIN MODEL #
@@ -132,7 +136,10 @@ class SGDTrainer(object):
 					this_validation_loss = np.mean(validation_losses)
 					this_validation_cost = np.mean(v_costs)
 
-					new_lr = decay_learning_rate()
+					if decay_learning_rate is None:
+						new_lr = self.initial_learning_rate
+					else:
+						new_lr = decay_learning_rate()
 
 					print('epoch %i, minibatch %i/%i, lr = %f, nll = %f, val loss %f, validation error %f %%' % (epoch, minibatch_index + 1, n_train_batches, new_lr, minibatch_avg_cost, this_validation_cost, this_validation_loss * 100.))
 				
