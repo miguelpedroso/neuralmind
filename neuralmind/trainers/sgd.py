@@ -86,7 +86,14 @@ class SGDTrainer(object):
 		)
 
 		if self.dynamic_learning_rate is not None:
-			decay_learning_rate = theano.function(inputs=[], outputs=learning_rate, updates={learning_rate: learning_rate * 0.99})
+			#decay_learning_rate = theano.function(inputs=[], outputs=learning_rate, updates={learning_rate: learning_rate * 0.99})
+			params = {
+				'trainer': self, 
+				'learning_rate': learning_rate  # theano tensor object
+			}
+			params.update(self.dynamic_learning_rate[1])
+			learning_rate_updater = self.dynamic_learning_rate[0](**params)
+			decay_learning_rate = learning_rate_updater.update_function
 		else:
 			decay_learning_rate = None
 
