@@ -1,3 +1,6 @@
+import sys
+sys.path.append("../")
+
 import activations
 import costs
 
@@ -9,6 +12,8 @@ import theano.tensor as T
 import time
 
 from trainer import TrainerBase
+
+import utils
 
 class SGDTrainer(TrainerBase):
 	def __init__(self, model, batch_size=20, n_epochs=100, learning_rate=0.1, dynamic_learning_rate=None, cost=None, global_L1_regularization=None, global_L2_regularization=None,  random_seed=23455):
@@ -28,7 +33,7 @@ class SGDTrainer(TrainerBase):
 	def train(self, train_set, validation_set):
 
 		batch_size = self.batch_size
-		print("building the model")
+		print("... building the model")
 		this_validation_loss = 0
 
 		# Segment the dataset into a training set and validation set
@@ -118,7 +123,7 @@ class SGDTrainer(TrainerBase):
 		done_looping = False
 		epoch = 0
 
-		print('\t\t Epoch \t|  Train loss  |  Valid loss  |  Valid Acc  | Learning rate')
+		print('\t\t Epoch \t|  Train loss  |  Valid loss  |  Valid Acc  |  Learning rate')
 
 		while (epoch < self.n_epochs) and (not done_looping):
 			epoch = epoch + 1
@@ -152,11 +157,33 @@ class SGDTrainer(TrainerBase):
 					else:
 						new_lr = decay_learning_rate()
 
-					print('\t\t %i \t|  %.8f  |  %.8f  |   %.4f%%  | %f' % (epoch, minibatch_avg_cost, this_validation_cost, (1. - this_validation_loss) * 100., new_lr))
+					#print('\t\t %i \t|  %.8f  |  %.8f  |   %.4f%%  |  %f' % (epoch, minibatch_avg_cost, this_validation_cost, (1. - this_validation_loss) * 100., new_lr))
+					str_line = '\t\t %i \t|  ' % epoch
+					if self.train_loss_history.index(min(self.train_loss_history)) == epoch - 1:
+						str_line += utils.bcolors.OKBLUE + ('%.8f' % minibatch_avg_cost) + utils.bcolors.ENDC
+					else:
+						str_line += '%.8f' % minibatch_avg_cost
+
+					str_line += '  |  '
+
+					if self.validation_loss_history.index(min(self.validation_loss_history)) == epoch - 1:
+						str_line += utils.bcolors.OKGREEN + ('%.8f' % this_validation_cost) + utils.bcolors.ENDC
+					else:
+						str_line += '%.8f' % this_validation_cost
+
+					"""
+					if self.validation_accuracy_history.index(min(self.validation_accuracy_history)) == epoch - 1:
+						str_line += utils.bcolors.OKGREEN + ('%.8f' % this_validation_cost) + utils.bcolors.ENDC
+					else:
+						str_line += '%.8f' % this_validation_cost
+					"""
+					
+					str_line += '  |   %.4f%%  |  %f' % ((1. - this_validation_loss) * 100., new_lr)
+					print(str_line)
 
 				# If we got the best validation score until now
 				if this_validation_loss < best_validation_loss:
-					#improve patience if loss improvement is good enough
+					# Improve patience if loss improvement is good enough
 					if this_validation_loss < best_validation_loss * improvement_threshold:
 						patience = max(patience, iter * patience_increase)
 
