@@ -16,7 +16,7 @@ from trainer import TrainerBase
 import utils
 
 class SGDTrainer(TrainerBase):
-	def __init__(self, model, batch_size=20, n_epochs=100, learning_rate=0.1, dynamic_learning_rate=None, cost=None, global_L1_regularization=None, global_L2_regularization=None,  random_seed=23455):
+	def __init__(self, model, batch_size=20, n_epochs=100, learning_rate=0.1, dynamic_learning_rate=None, cost=None, global_L1_regularization=None, global_L2_regularization=None, early_stopping=False, patience=10000, improvement_threshold=0.995, random_seed=23455):
 
 		self.model = model
 		self.input = self.model.input
@@ -28,13 +28,17 @@ class SGDTrainer(TrainerBase):
 		self.global_L1_regularization = global_L1_regularization
 		self.global_L2_regularization = global_L2_regularization
 		self.dynamic_learning_rate = dynamic_learning_rate
+
+		self.early_stopping = early_stopping
+		self.patience = patience
+		self.improvement_threshold = improvement_threshold
 	
 
 	def train(self, train_set, validation_set):
 
 		batch_size = self.batch_size
 		print("... building the model")
-		this_validation_loss = 0
+		this_validation_loss = 0.
 
 		# Segment the dataset into a training set and validation set
 		train_set_x, train_set_y = train_set
@@ -109,12 +113,10 @@ class SGDTrainer(TrainerBase):
 
 		print '... training the model'
 		# early-stopping parameters
-		patience = 5000  # look as this many examples regardless
-		patience_increase = 2  # wait this much longer when a new best is found
-		improvement_threshold = 0.995  # a relative improvement of this much is
-		# considered significant
-		validation_frequency = min(n_train_batches, patience / 2)
-		# go through this many minibatche before checking the network on the validation set; in this case we check every epoch
+		patience = self.patience  # Look as this many examples regardless
+		patience_increase = 2  # Wait this much longer when a new best is found
+		#improvement_threshold = self.improvement_threshold  # a relative improvement of this much is considered significant
+		validation_frequency = min(n_train_batches, patience / 2) # Go through this many minibatches before checking the network on the validation set; in this case we check every epoch
 
 		best_validation_loss = np.inf
 		test_score = 0.
@@ -123,9 +125,16 @@ class SGDTrainer(TrainerBase):
 		done_looping = False
 		epoch = 0
 
-		print('\t\t Epoch \t|  Train loss  |  Valid loss  |  Valid Acc  |  Learning rate')
+		start_epoch_time = None
+
+		print('\t\t Epoch \t|  Train loss  |  Valid loss  |  Valid Acc  |  Learn. rate  |  Duration')
 
 		while (epoch < self.n_epochs) and (not done_looping):
+
+
+			start_epoch_time = time.time()
+
+
 			epoch = epoch + 1
 
 			for minibatch_index in xrange(n_train_batches):
@@ -157,6 +166,10 @@ class SGDTrainer(TrainerBase):
 					else:
 						new_lr = decay_learning_rate()
 
+					if start_epoch_time is not None:
+						end_epoch_time = time.time()
+						elapsed_time = end_epoch_time - start_epoch_time
+
 					#print('\t\t %i \t|  %.8f  |  %.8f  |   %.4f%%  |  %f' % (epoch, minibatch_avg_cost, this_validation_cost, (1. - this_validation_loss) * 100., new_lr))
 					str_line = '\t\t %i \t|  ' % epoch
 					if self.train_loss_history.index(min(self.train_loss_history)) == epoch - 1:
@@ -171,26 +184,29 @@ class SGDTrainer(TrainerBase):
 					else:
 						str_line += '%.8f' % this_validation_cost
 
-					"""
+					str_line += '  |  '
+
 					if self.validation_accuracy_history.index(min(self.validation_accuracy_history)) == epoch - 1:
-						str_line += utils.bcolors.OKGREEN + ('%.8f' % this_validation_cost) + utils.bcolors.ENDC
+						str_line += utils.bcolors.WARNING + ('%.5f%%' % ((1. - this_validation_loss) * 100.)) + utils.bcolors.ENDC
 					else:
-						str_line += '%.8f' % this_validation_cost
-					"""
+						str_line += '%.5f%%' % ((1. - this_validation_loss) * 100.)
 					
-					str_line += '  |   %.4f%%  |  %f' % ((1. - this_validation_loss) * 100., new_lr)
+					
+					str_line += '  |  %.9f  |  %.3fs ' % (new_lr, elapsed_time)
+
 					print(str_line)
 
-				# If we got the best validation score until now
-				if this_validation_loss < best_validation_loss:
-					# Improve patience if loss improvement is good enough
-					if this_validation_loss < best_validation_loss * improvement_threshold:
-						patience = max(patience, iter * patience_increase)
+				if self.early_stopping:
+					# If we got the best validation score until now
+					if this_validation_loss < best_validation_loss:
+						# Improve patience if loss improvement is good enough
+						if this_validation_loss < best_validation_loss * self.improvement_threshold:
+							patience = max(patience, iter * patience_increase)
 
-					best_validation_loss = this_validation_loss
+						best_validation_loss = this_validation_loss
 				
-				#if patience <= iter:
-				#	done_looping = True
-				#	break
+					if patience <= iter:
+						done_looping = True
+						break
 
 		end_time = time.clock()

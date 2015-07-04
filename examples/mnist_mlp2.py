@@ -45,7 +45,6 @@ datasets = load_data("mnist.pkl.gz")
 
 model = NeuralNetwork(
 	n_inputs=28*28,
-	batch_size=20,
 	layers = [
 		(HiddenLayer,
 		{
@@ -67,7 +66,7 @@ model = NeuralNetwork(
 		{
 			'batch_size': 20,
 			'learning_rate': 0.1,
-			'n_epochs': 100,
+			'n_epochs': 400,
 			'global_L2_regularization': 0.0001,
 			'dynamic_learning_rate': (ExponentialDecay, {'decay': 0.99}),
 		}
