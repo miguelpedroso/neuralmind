@@ -30,35 +30,7 @@ class NeuralNetwork(object):
 		self.layers_pred = []
 
 		self.theano_rng = None
-		#if not self.theano_rng:
-		#self.theano_rng = T.shared_randomstreams.RandomStreams(rng.randint(2 ** 30)) # Put seed here
 
-		"""
-		for layer in layers:
-			print layer[1]
-
-			if not self.layers:
-				l_params = {
-					'input': self.layer1_input, 
-					'n_in': n_inputs,
-					'rng': rng,
-					'model': self
-				}
-				l_params.update(layer[1])
-				b = layer[0](**l_params) # Cascade inputs!
-			else:
-				self.prev_layer = prev_layer = self.layers[-1]
-				l_params = {
-					'input': prev_layer.output, 
-					'n_in': prev_layer.n_out,
-					'rng': rng,
-					'model': self,
-				}
-				l_params.update(layer[1])
-				b = layer[0](**l_params)
-
-			self.layers.append(b)
-		"""
 		prev_layer_class = None
 		for layer in layers:
 			print layer
