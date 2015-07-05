@@ -44,6 +44,7 @@ class NeuralNetwork(object):
 				}
 				l_params.update(layer[1])
 				b = layer[0](**l_params) # Cascade inputs!
+				self.layers_pred.append(b)
 			else:
 				self.prev_layer = prev_layer = self.layers[-1]
 				l_params = {
@@ -63,7 +64,7 @@ class NeuralNetwork(object):
 						'model': self,
 						'W': b.W,  # TODO: RESCALE THESE WAITS
 						'b': b.b,  # Put this more dynamic!
-						'W_rescale': 0.5  #Fix this
+						'W_rescale': 1. - self.layers[-1].probability#0.5  #Fix this
 					}
 					l_params.update(layer[1])
 					c = layer[0](**l_params)

@@ -21,11 +21,11 @@ class ConvolutionLayer(object):
 
 
 		# Set up the parameters
-		image_shape = (model.batch_size, image_shape[0], image_shape[1], image_shape[2])
+		image_shape = (model.trainer[1]["batch_size"], image_shape[0], image_shape[1], image_shape[2])
 		filter_shape = (n_kernels, filter_shape[0], filter_shape[1], filter_shape[2])
 		
 
-		#print image_shape
+		print image_shape
 		#print filter_shape
 
 		# there are "num input feature maps * filter height * filter width"

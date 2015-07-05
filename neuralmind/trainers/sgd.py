@@ -192,7 +192,7 @@ class SGDTrainer(TrainerBase):
 						str_line += '%.5f%%' % ((1. - this_validation_loss) * 100.)
 					
 					
-					str_line += '  |  %.9f  |  %.3fs ' % (new_lr, elapsed_time)
+					str_line += '  |  %.9f  |  %.3fs ' % (np.array(new_lr, dtype=np.float32), elapsed_time)  # Convert to numpy array, because when using GPU, the returned learning rate is a CudaNdArray
 
 					print(str_line)
 
