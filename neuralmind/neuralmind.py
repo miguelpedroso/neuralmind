@@ -69,7 +69,6 @@ class NeuralNetwork(object):
 					l_params.update(layer[1])
 					c = layer[0](**l_params)
 					self.layers_pred.append(c)
-					print "other path"
 				else:
 					self.layers_pred.append(b) #Except dropout
 
